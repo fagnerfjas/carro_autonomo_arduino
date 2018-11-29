@@ -1,0 +1,238 @@
+#include <Servo.h>
+#include <Ultrasonic.h>
+
+// Fagner Jefferson 
+// 2018
+
+int ledAzul = 12;
+int ledVermelho = 13;
+int pinServo = 10;
+int pinTrigger = 9;
+int pinEcho = 8;
+
+//motor_A
+int pin1MA = 3 ;
+int pin2MA = 4 ;
+int pinVelocidadeA = 2;
+ 
+//motor_B
+int pin1MB = 5 ;
+int pin2MB = 6 ;
+int pinVelocidadeB = 7;
+ 
+//variavel auxiliar
+int velocidade = 0;
+
+Servo servo;                                   // Inicializa o servomotor
+Ultrasonic ultrasonic(pinTrigger, pinEcho);    // Inicializa o sensor ultrasonico
+
+void setup() {
+  Serial.begin(9600);
+  Serial.println("lendo dados");
+  
+  pinMode(ledAzul, OUTPUT);  
+  pinMode(ledVermelho, OUTPUT);
+  servo.attach(pinServo);
+
+  pinMode(pin1MA, OUTPUT);
+  pinMode(pin2MA, OUTPUT);
+  pinMode(pin1MB, OUTPUT);
+  pinMode(pin2MB, OUTPUT);
+  pinMode(pinVelocidadeA, OUTPUT);
+  pinMode(pinVelocidadeB, OUTPUT);
+    
+  look_forward();
+}
+
+
+
+// MAIN - Method  ---------------------------------------
+void loop() {
+
+  long distancia = distance_cm();
+  
+  carro_frente();
+
+  if( distancia <= 40 ){
+    carro_para();
+    String direcao = procurar_caminho();
+    
+    if( direcao == "esquerda" ){
+      carro_re();
+      delay(200);
+      carro_eixo_esquerda();
+      delay(500);
+    }else if( direcao == "esquerda" ){
+      carro_re();
+      delay(200);
+      carro_eixo_direita();
+      delay(500);
+    }else{
+      carro_re();
+      delay(2000);
+      carro_re_direita();
+      delay(1000);
+    }
+  }
+}
+
+
+
+String procurar_caminho(){
+  look_right();
+  long dist_right = distance_cm();
+  delay( 1000 );
+
+  look_left();
+  long dist_left = distance_cm();
+  delay(1000);
+
+  look_forward();
+  delay(1000);
+  
+  if( dist_left <= 40 and dist_right <= 40 ){
+    return "re";
+  }
+
+  if( dist_left > dist_right ){
+    return "esquerda";
+  }else if( dist_left < dist_right ){
+    return "direita";
+  }
+}
+
+
+// CONTROLES DO CARRO ---------------------------- DIREÇÃO DO CARRO
+void carro_frente(){
+    motorA_frente();
+    motorB_frente();
+}
+
+void carro_re(){
+  motorA_volta();
+  motorB_volta();
+  led_alarm();
+}
+
+void carro_para(){
+  led_alarm();
+  motorA_para();
+  motorB_para();
+}
+
+void carro_frente_esquerda(){
+  motorA_frente();
+  motorB_para();
+  led_alarm();
+}
+
+void carro_frente_direita(){
+  motorA_para();
+  motorB_frente();
+  led_alarm();
+}
+
+void carro_re_esquerda(){
+  motorA_para();
+  motorB_volta();
+  led_alarm();
+}
+
+void carro_re_direita(){
+  motorA_volta();
+  motorB_para();
+  led_alarm();
+}
+
+void carro_eixo_esquerda(){
+  motorA_frente();
+  motorB_volta();
+  led_alarm();
+}
+
+void carro_eixo_direita(){
+  motorA_volta();
+  motorB_frente();
+  led_alarm();
+}
+
+
+// CONTROLES DO MOTOR A ----------------------- MOTOR A
+void motorA_frente(){
+  digitalWrite(pin1MA, HIGH);
+  digitalWrite(pin2MA, LOW);
+  analogWrite(pinVelocidadeA, 255);
+}
+
+void motorA_volta(){
+  digitalWrite(pin1MA, LOW);
+  digitalWrite(pin2MA, HIGH);
+  analogWrite(pinVelocidadeA,255);
+}
+
+void motorA_para(){
+  digitalWrite(pin1MA, LOW);
+  digitalWrite(pin2MA, LOW);
+  analogWrite(pinVelocidadeA,0);
+}
+
+// CONTROLES DO MOTOR B ------------------------- MOTOR B
+void motorB_frente(){
+  digitalWrite(pin1MB, HIGH);
+  digitalWrite(pin2MB, LOW);
+  analogWrite(pinVelocidadeB,255);
+}
+
+void motorB_volta(){
+  digitalWrite(pin1MB, LOW);
+  digitalWrite(pin2MB, HIGH);
+  analogWrite(pinVelocidadeB,255);
+}
+
+void motorB_para(){
+  digitalWrite(pin1MB, LOW);
+  digitalWrite(pin2MB, LOW);
+  analogWrite(pinVelocidadeB,0);
+}
+
+// Calcula os valores do sensor untrasonico e retorna o valor em centrimetros ------------DISTANCIA
+long distance_cm(){
+  long microsec = ultrasonic.timing();
+  return ultrasonic.convert(microsec, Ultrasonic::CM);
+}
+
+// controles do servo ----------------------------------- SERVO
+void look_left(){
+  servo.write(0);
+}
+
+// Olhar para a direita
+void look_right(){
+  servo.write(150);
+}
+
+// Olhar para frente
+void look_forward(){
+  servo.write(70);
+}
+
+
+// Simula luzes da polícia --------------------------------- LUZES 
+void led_police() {
+  digitalWrite(ledVermelho, LOW);
+  digitalWrite(ledAzul, HIGH);
+  delay(500);
+  digitalWrite(ledVermelho, HIGH);
+  digitalWrite(ledAzul, LOW);
+  delay(500);
+}
+
+// Pisca rapidamente
+void led_alarm() {
+  digitalWrite(ledVermelho, HIGH);
+  digitalWrite(ledAzul, HIGH);
+  delay(70);
+  digitalWrite(ledVermelho, LOW);
+  digitalWrite(ledAzul, LOW);
+  delay(70);
+}
