@@ -1,5 +1,5 @@
-#include <Servo.h>
 #include <Ultrasonic.h>
+#include <Servo.h>
 
 // Fagner Jefferson 
 // 2018
@@ -28,7 +28,7 @@ Ultrasonic ultrasonic(pinTrigger, pinEcho);    // Inicializa o sensor ultrasonic
 
 void setup() {
   Serial.begin(9600);
-  Serial.println("lendo dados");
+  Serial.println("boas vindas");
   
   pinMode(ledAzul, OUTPUT);  
   pinMode(ledVermelho, OUTPUT);
@@ -48,12 +48,16 @@ void setup() {
 
 // MAIN - Method  ---------------------------------------
 void loop() {
+// Serial.println(distance_cm());
+// delay(500);
+  
+  float distancia = distance_cm();
 
-  long distancia = distance_cm();
+  Serial.println(distancia);
   
   carro_frente();
 
-  if( distancia <= 40 ){
+  if( distancia <= 60 ){
     carro_para();
     String direcao = procurar_caminho();
     
@@ -196,9 +200,17 @@ void motorB_para(){
 }
 
 // Calcula os valores do sensor untrasonico e retorna o valor em centrimetros ------------DISTANCIA
-long distance_cm(){
-  long microsec = ultrasonic.timing();
-  return ultrasonic.convert(microsec, Ultrasonic::CM);
+float distance_cm(){
+  digitalWrite(pinTrigger, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(pinTrigger, LOW);
+ 
+  // medir tempo de ida e volta do pulso ultrassônico
+  float tempo = pulseIn(pinEcho, HIGH);
+ 
+  // calcular as distâncias em centímetros e polegadas
+  float distancia_cm = tempo / 29.4 / 2;
+  return distancia_cm;
 }
 
 // controles do servo ----------------------------------- SERVO
